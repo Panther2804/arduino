@@ -15,7 +15,7 @@ byte setmode = 1;
 byte lastpress2;
 short hours = 0;
 short minutes = 0;
-short hm = 0;
+int hm = 0;
 
 byte bs1 = digitalRead(button1);
 byte bs2 = digitalRead(button2);
@@ -111,11 +111,13 @@ void loop() {
       minutes = 59;
     }
 
-    hm = hours * 100 + minutes;
+    hm = hours * 100 + minutes;    
     if (hm < 1000) {
-      display.print("0000");
+      String s = String('0') + String(hm);
+      display.print(s);
+    } else {
+      display.print(hm);
     }
-    display.print(hm);
 
     lastpress = bs2;
     delay(20);
