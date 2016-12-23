@@ -32,82 +32,73 @@ void setup() {
   pinMode(button1, INPUT);
   pinMode(button2, INPUT);
   pinMode(button3, INPUT);
-  
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
 
- bs1 = digitalRead(button1);
- bs2 = digitalRead(button2);
- bs3 = digitalRead(button3);
+  bs1 = digitalRead(button1);
+  bs2 = digitalRead(button2);
+  bs3 = digitalRead(button3);
 
- Serial.println("buttonstate");
- Serial.println(bs2);
+  Serial.println("buttonstate");
+  Serial.println(bs2);
 
- Serial.println("lastpress");
- Serial.println(lastpress);
+  Serial.println("lastpress");
+  Serial.println(lastpress);
 
- if((bs2==1) && (lastpress==0))
- {setmode ++;}
+  if ((bs2==1) && (lastpress==0)) {
+    setmode ++;
+  }
 
- if(setmode == 4)
- {setmode = 1;}
+  if (setmode == 4) {
+    setmode = 1;
+  }
 
+  Serial.println("setastate:");
+  Serial.println(setmode);
 
+  Serial.println("hmin");
+  Serial.println(hm);
 
- 
- Serial.println("setastate:");
- Serial.println(setmode);
+  //if (setmode == 1)
+  //{
+  display.print(hm);
+  //}
+  
+  if (setmode == 2) {
+    if (bs1 = 1) { 
+      hours--;
+    }
+    if (bs3 = 1) { 
+      hours++;
+    }
+  }
 
- Serial.println("hmin");
- Serial.println(hm);
+  if (setmode == 3) {
+    if (bs1 = 1) { 
+      minutes++;
+    }
+    if (bs3 = 1) { 
+      minutes --;
+    }
+  }
 
- //if (setmode == 1)
- //{
-display.print(hm);
- //}
-
-
- 
- if (setmode == 2)
- {
-  if (bs1 = 1)
-  { hours --;}
-
-  if (bs3 = 1)
-  { hours ++;}
- }
-
- if (setmode == 3)
- {
-  if (bs1 = 1)
-  { minutes ++;}
-
-  if (bs3 = 1)
-  { minutes --;}
- }
-
- 
-
- if (bs2 == 1)
- {
+  if (bs2 == 1) {
     digitalWrite(LED_BUILTIN, HIGH); 
- }
-
- if (bs2 == 0)
- {
+  }
+  if (bs2 == 0) {
     digitalWrite(LED_BUILTIN, LOW); 
- }
-
- if(hours == 24)
- {hours = 0;}
-
- if(hours == 61)
- {hours = 0;}
+  }
+  if (hours == 24) {
+    hours = 0;
+  }
+  if(hours == 61) {
+    hours = 0;
+  }
  
-lastpress = bs2;
-delay(20);
+  lastpress = bs2;
+  delay(20);
 }
 
