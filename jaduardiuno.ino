@@ -28,7 +28,6 @@ void setup() {
   display.setBacklight(100);  // set the brightness to 100 %
   display.print("RDY");      // display INIT on the display
 
-  
   pinMode(button1, INPUT);
   pinMode(button2, INPUT);
   pinMode(button3, INPUT);
@@ -42,63 +41,81 @@ void loop() {
   bs2 = digitalRead(button2);
   bs3 = digitalRead(button3);
 
-  Serial.println("buttonstate");
-  Serial.println(bs2);
-
-  Serial.println("lastpress");
-  Serial.println(lastpress);
-
-  if ((bs2==1) && (lastpress==0)) {
-    setmode ++;
+  if ((bs2 == 1) && (lastpress == 0)) {
+    setmode++;
   }
 
   if (setmode == 4) {
     setmode = 1;
   }
 
-  Serial.println("setastate:");
-  Serial.println(setmode);
+  if (bs1 || (bs2 && !lastpress) || bs3) {
 
-  Serial.println("hmin");
-  Serial.println(hm);
+    Serial.print("buttonstate: ");
+    Serial.print(bs2);
 
-  //if (setmode == 1)
-  //{
-  display.print(hm);
-  //}
-  
-  if (setmode == 2) {
-    if (bs1 = 1) { 
-      hours--;
-    }
-    if (bs3 = 1) { 
-      hours++;
-    }
-  }
+    Serial.print(" lastpress: ");
+    Serial.print(lastpress);
 
-  if (setmode == 3) {
-    if (bs1 = 1) { 
-      minutes++;
-    }
-    if (bs3 = 1) { 
-      minutes --;
-    }
-  }
+    Serial.print(" setastate: ");
+    Serial.print(setmode);
 
-  if (bs2 == 1) {
-    digitalWrite(LED_BUILTIN, HIGH); 
+    Serial.print(" hm: ");
+    Serial.print(hm);
+
+    Serial.print(" hours: ");
+    Serial.print(hours);
+
+    Serial.print(" minutes: ");
+    Serial.println(minutes);
+
+    //if (setmode == 1)
+    //{
+    // display.print(hm);
+    //}
+
+    if (setmode == 2) {
+      if (bs1 == 1) {
+        hours--;
+      }
+      if (bs3 = 1) {
+        hours++;
+      }
+    }
+
+    if (setmode == 3) {
+      if (bs1 == 1) {
+        minutes++;
+      }
+      if (bs3 == 1) {
+        minutes--;
+      }
+    }
+
+    if (bs2 == 1) {
+      digitalWrite(LED_BUILTIN, HIGH);
+    }
+    if (bs2 == 0) {
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+    if (hours >= 24) {
+      hours = 0;
+    }
+    if (hours <= 0) {
+      hours = 23;
+    }
+    if (minutes >= 61) {
+      minutes = 0;
+    }
+    if (minutes <= 0) {
+      minutues = 59;
+    }
+
+    hm = hours * 100 + minutes;
+    display.print(hm);
+
+    lastpress = bs2;
+    delay(20);
   }
-  if (bs2 == 0) {
-    digitalWrite(LED_BUILTIN, LOW); 
-  }
-  if (hours == 24) {
-    hours = 0;
-  }
-  if(hours == 61) {
-    hours = 0;
-  }
- 
-  lastpress = bs2;
-  delay(20);
 }
 
