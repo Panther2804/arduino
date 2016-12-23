@@ -13,13 +13,13 @@ int number = 10;
 byte lastpress = 0;
 byte setmode = 1;
 byte lastpress2;
-byte hours = 0;
-byte minutes = 0;
-int hm = 0;
+short hours = 0;
+short minutes = 0;
+short hm = 0;
 
-int bs1 = digitalRead(button1);
-int bs2 = digitalRead(button2);
-int bs3 = digitalRead(button3);
+byte bs1 = digitalRead(button1);
+byte bs2 = digitalRead(button2);
+byte bs3 = digitalRead(button3);
 
 // run setup code
 void setup() {
@@ -78,7 +78,7 @@ void loop() {
       if (bs1 == 1) {
         hours--;
       }
-      if (bs3 = 1) {
+      if (bs3 == 1) {
         hours++;
       }
     }
@@ -98,20 +98,23 @@ void loop() {
     if (bs2 == 0) {
       digitalWrite(LED_BUILTIN, LOW);
     }
-    if (hours >= 24) {
+    if (hours > 23) {
       hours = 0;
     }
-    if (hours <= 0) {
+    if (hours < 0) {
       hours = 23;
     }
-    if (minutes >= 61) {
+    if (minutes > 59) {
       minutes = 0;
     }
-    if (minutes <= 0) {
-      minutues = 59;
+    if (minutes < 0) {
+      minutes = 59;
     }
 
     hm = hours * 100 + minutes;
+    if (hm < 1000) {
+      display.print("0000");
+    }
     display.print(hm);
 
     lastpress = bs2;
