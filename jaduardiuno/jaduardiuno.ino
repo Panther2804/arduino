@@ -5,7 +5,7 @@
 WireRtcLib rtc;
 
 // include the SevenSegmentTM1637 library
-#include "SevenSegmentTM1637.h"
+#include <SevenSegmentTM1637.h>
 
 const byte button1 = 10;
 const byte button2 = 11;
@@ -35,7 +35,7 @@ byte bs3 = digitalRead(button3);
 
 // run setup code
 void setup() {
-   
+
   Wire.begin();
   rtc.begin();
 
@@ -161,15 +161,15 @@ void loop() {
     wcounter = 0;
   }
 
- if (setmode == 1) {
-  hm = hours * 100 + minutes;
-  if (hm < 1000) {
-    String s = String('0') + String(hm);
-    display.print(s);
-  } else {
-    display.print(hm);
+  if (setmode == 1) {
+    hm = hours * 100 + minutes;
+    if (hm < 1000) {
+      String s = String('0') + String(hm);
+      display.print(s);
+    } else {
+      display.print(hm);
+    }
   }
- }
   delay(20);
 }
 
