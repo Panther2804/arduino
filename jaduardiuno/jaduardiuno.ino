@@ -1,41 +1,60 @@
-
+/**
+ * Projekt: Tageslichtwecker
+ * 
+ * Paul Ole und Thomas Pasch
+ */
 #include <Wire.h>
 #include <WireRtcLib.h>
-
-WireRtcLib rtc;
-
-// include the SevenSegmentTM1637 library
 #include <SevenSegmentTM1637.h>
 
-const byte button1 = 10;
-const byte button2 = 11;
-const byte button3 = 12;
+/*
+ * Push buttons
+ */
+const byte BUTTON1 = 10;
+const byte BUTTON2 = 11;
+const byte BUTTON3 = 12;
 
+/*
+ * 4 digit 7 segment display TM1637 ports
+ */
 const byte PIN_CLK = 4;   // define CLK pin (any digital pin)
 const byte PIN_DIO = 5;   // define DIO pin (any digital pin)
-SevenSegmentTM1637    display(PIN_CLK, PIN_DIO);
 
-const int led = 9;
+/*
+ * power LED port
+ */
+const int LED = 9;
 
-int number = 10;
+WireRtcLib rtc;
+SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
+
+// last state of BUTTON2
 byte lastpress = 0;
+// mode, i.e. state machine state
 byte setmode = 1;
-byte lastpress2;
+// RTC hours of day
 short hours = 0;
+// RTC minutes of hour
 short minutes = 0;
-short whours = 0;
-short wminutes = 0;
-byte brightness = 0;
-long wcounter = 0;
-int hm = 0;
 
-byte bs1 = digitalRead(button1);
-byte bs2 = digitalRead(button2);
-byte bs3 = digitalRead(button3);
+// wake/alarm hours of day
+short whours = 0;
+// wake/alarm minutes of hour
+short wminutes = 0;
+// brightness (between 0 and 255)
+uint8_t brightness = 0;
+// w: 0 normal, 1: alarm triggered, >1 ticks after alarm
+long wcounter = 0;
+
+/*
+ * Button states
+ */
+byte bs1 = digitalRead(BUTTON1);
+byte bs2 = digitalRead(BUTTON2);
+byte bs3 = digitalRead(BUTTON3);
 
 // run setup code
 void setup() {
-
   Wire.begin();
   rtc.begin();
 
@@ -44,23 +63,22 @@ void setup() {
   display.setBacklight(100);  // set the brightness to 100 %
   display.print("RDY");      // display INIT on the display
 
-  pinMode(button1, INPUT);
-  pinMode(button2, INPUT);
-  pinMode(button3, INPUT);
-  pinMode(led, OUTPUT);
+  pinMode(BUTTON1, INPUT);
+  pinMode(BUTTON2, INPUT);
+  pinMode(BUTTON3, INPUT);
+  pinMode(LED, OUTPUT);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   WireRtcLib::tm* t = rtc.getTime();
   hours = t->hour;
   minutes = t->min;
   Serial.println(hours);
   Serial.println(minutes);
 
-  bs1 = digitalRead(button1);
-  bs2 = digitalRead(button2);
-  bs3 = digitalRead(button3);
+  bs1 = digitalRead(BUTTON1);
+  bs2 = digitalRead(BUTTON2);
+  bs3 = digitalRead(BUTTON3);
 
   if ((bs2 == 1) && (lastpress == 0)) {
     setmode++;
@@ -80,9 +98,6 @@ void loop() {
 
     Serial.print(" setastate: ");
     Serial.print(setmode);
-
-    Serial.print(" hm: ");
-    Serial.print(hm);
 
     Serial.print(" whours: ");
     Serial.print(hours);
@@ -134,7 +149,7 @@ void loop() {
       wminutes = 59;
     }
 
-    hm = whours * 100 + wminutes;
+    int hm = whours * 100 + wminutes;
     if (hm < 1000) {
       String s = String('0') + String(hm);
       display.print(s);
@@ -153,7 +168,7 @@ void loop() {
   if (wcounter >= 1) {
     wcounter++;
     brightness = wcounter / 100;
-    analogWrite(led, brightness);
+    analogWrite(LED, brightness);
 
   }
 
@@ -162,7 +177,7 @@ void loop() {
   }
 
   if (setmode == 1) {
-    hm = hours * 100 + minutes;
+    int hm = hours * 100 + minutes;
     if (hm < 1000) {
       String s = String('0') + String(hm);
       display.print(s);
