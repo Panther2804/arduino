@@ -1,28 +1,28 @@
 /**
- * Projekt: Tageslichtwecker
- * 
- * Paul Ole und Thomas Pasch
- */
+   Projekt: Tageslichtwecker
+
+   Paul Ole und Thomas Pasch
+*/
 #include <Wire.h>
 #include <WireRtcLib.h>
 #include <SevenSegmentTM1637.h>
 
 /*
- * Push buttons
- */
+   Push buttons
+*/
 const byte BUTTON1 = 10;
 const byte BUTTON2 = 11;
 const byte BUTTON3 = 12;
 
 /*
- * 4 digit 7 segment display TM1637 ports
- */
+   4 digit 7 segment display TM1637 ports
+*/
 const byte PIN_CLK = 4;   // define CLK pin (any digital pin)
 const byte PIN_DIO = 5;   // define DIO pin (any digital pin)
 
 /*
- * power LED port
- */
+   power LED port
+*/
 const int LED = 9;
 
 WireRtcLib rtc;
@@ -35,9 +35,13 @@ byte lastpress = 0;
 // mode, i.e. state machine state
 byte setmode = MODE_CLOCK;
 // RTC hours of day
-short hours = 0;
+uint8_t hours;
 // RTC minutes of hour
-short minutes = 0;
+uint8_t minutes;
+// RTC seconds of minute
+uint8_t seconds;
+// RTC ticks
+time_t ticks;
 
 // wake/alarm hours of day
 short whours = 0;
@@ -49,8 +53,8 @@ uint8_t brightness = 0;
 long wcounter = 0;
 
 /*
- * Button states (0 or 1)
- */
+   Button states (0 or 1)
+*/
 byte bs1;
 byte bs2;
 byte bs3;
@@ -72,27 +76,36 @@ void setup() {
 }
 
 void loop() {
+  // read RTC
   WireRtcLib::tm* t = rtc.getTime();
   hours = t->hour;
   minutes = t->min;
-  Serial.println(hours);
-  Serial.println(minutes);
+  seconds = t->sec;
+  ticks = rtc.makeTime(t);
 
+  // read buttons
   bs1 = digitalRead(BUTTON1);
   bs2 = digitalRead(BUTTON2);
   bs3 = digitalRead(BUTTON3);
 
+  // change mode if BUTTON2 is (newly) pressed 
   if ((bs2 == 1) && (lastpress == 0)) {
     setmode++;
   }
-
   if (setmode >= MODE_OVERFLOW) {
     setmode = MODE_CLOCK;
   }
 
   if (bs1 || (bs2 && !lastpress) || bs3) {
+    Serial.print(hours);
+    Serial.print(":");
+    Serial.print(minutes);
+    Serial.print(":");
+    Serial.print(seconds);
+    Serial.print(" ");
+    Serial.print(ticks);
 
-    Serial.print("buttonstate: ");
+    Serial.print(" buttonstate: ");
     Serial.print(bs2);
 
     Serial.print(" lastpress: ");
@@ -145,42 +158,43 @@ void loop() {
     if (wminutes < 0) {
       wminutes = 59;
     }
-
-    int hm = whours * 100 + wminutes;
-    if (hm < 1000) {
-      String s = String('0') + String(hm);
-      display.print(s);
-    } else {
-      display.print(hm);
-    }
+    hmDisplay(whours, wminutes);
 
     lastpress = bs2;
     delay(20);
   }
 
+  // check for alarm
   if ((whours == hours) && (wminutes == minutes)) {
     wcounter = 1;
   }
 
+  // brighten LED
   if (wcounter >= 1) {
     wcounter++;
     brightness = wcounter / 100;
     analogWrite(LED, brightness);
   }
 
+  // turn of alarm (if 'ringing')
   if (bs1 || bs3) {
     wcounter = 0;
   }
 
+  // display time (if in normal mode)
   if (setmode == MODE_CLOCK) {
-    int hm = hours * 100 + minutes;
-    if (hm < 1000) {
-      String s = String('0') + String(hm);
-      display.print(s);
-    } else {
-      display.print(hm);
-    }
+    hmDisplay(hours, minutes);
   }
   delay(20);
+}
+
+void hmDisplay(uint8_t hours, uint8_t minutes) {
+  int hm = hours * 100 + minutes;
+  if (hm < 1000) {
+    String s = String('0') + String(hm);
+    display.print(s);
+  } else {
+    display.print(hm);
+  }
 }
 
