@@ -28,6 +28,9 @@ const uint8_t LED = 9;
 // Must be between 0 and 255, however, our experiments show that there is no change above ~20.
 const int MAX_LED_VALUE = 30;
 
+const uint8_t LED_LEFT = 2;
+const uint8_t LED_RIGHT = 3;
+
 WireRtcLib rtc;
 SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
 
@@ -74,6 +77,11 @@ void setup() {
   pinMode(BUTTON2, INPUT);
   pinMode(BUTTON3, INPUT);
   pinMode(LED, OUTPUT);
+  pinMode(LED_LEFT, OUTPUT);
+  pinMode(LED_RIGHT, OUTPUT);
+
+  digitalWrite(LED_LEFT, LOW);
+  digitalWrite(LED_RIGHT, LOW);
 
   // read RTC alarm (this is in eeprom hence persistent)
   WireRtcLib::tm* t = rtc.getAlarm();
@@ -200,9 +208,13 @@ void loop() {
   if (wcounter) {
     // Add one to brightness every second
     int brightness = (ticks - wcounter) / 10000;
+    if (brightness > MAX_LED_VALUE / 2) {
+      digitalWrite(LED_LEFT, HIGH);
+    }
     if (brightness > MAX_LED_VALUE) {
       // max brightness is 255
       brightness = MAX_LED_VALUE;
+      digitalWrite(LED_RIGHT, HIGH);
     }
     Serial.print("LED power: ");
     Serial.println(brightness);
@@ -215,6 +227,8 @@ void loop() {
     wcounter = 0;
     Serial.print("LED power: 0 (off)");
     analogWrite(LED, 0);
+    digitalWrite(LED_LEFT, LOW);
+    digitalWrite(LED_RIGHT, LOW);
 
     // reset buttons
     bs1 = bs3 = 0;
