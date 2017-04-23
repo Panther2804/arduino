@@ -109,6 +109,7 @@ void loop() {
     rtc.setAlarm(t);
 
     mode = MODE_CLOCK;
+    Serial.println("mode overflow, back to 1");
   }
 
   /*
@@ -119,64 +120,66 @@ void loop() {
   }
    */
 
-  if ((bs1 || bs3) && mode > MODE_CLOCK) {
-    Serial.print(hours);
-    Serial.print(":");
-    Serial.print(minutes);
-    Serial.print(":");
-    Serial.print(seconds);
-    Serial.print(" ");
-    Serial.print(ticks);
+  if (mode > MODE_CLOCK && mode < MODE_OVERFLOW) {
+    if (bs1 || bs3) {
+      Serial.print(hours);
+      Serial.print(":");
+      Serial.print(minutes);
+      Serial.print(":");
+      Serial.print(seconds);
+      Serial.print(" ");
+      Serial.print(ticks);
 
-    Serial.print(" buttons: ");
-    Serial.print(bs1);
-    // Serial.print(bs2);
-    Serial.print(bs3);
+      Serial.print(" buttons: ");
+      Serial.print(bs1);
+      // Serial.print(bs2);
+      Serial.print(bs3);
 
-    Serial.print(" mode: ");
-    Serial.print(mode);
+      Serial.print(" mode: ");
+      Serial.print(mode);
 
-    Serial.print(" alarm: ");
-    Serial.print(whours);
-    Serial.print(":");
-    Serial.println(wminutes);
+      Serial.print(" alarm: ");
+      Serial.print(whours);
+      Serial.print(":");
+      Serial.println(wminutes);
 
-    if (mode == MODE_SET_ALARM_HOURS) {
-      if (bs1) {
-        whours--;
-        // delay(100);
+      if (mode == MODE_SET_ALARM_HOURS) {
+        if (bs1) {
+          whours--;
+          // delay(100);
+        }
+        if (bs3) {
+          whours++;
+          // delay(100);
+        }
       }
-      if (bs3) {
-        whours++;
-        // delay(100);
-      }
-    }
 
-    if (mode == MODE_SET_ALARM_MINUTES) {
-      if (bs1) {
-        wminutes++;
+      if (mode == MODE_SET_ALARM_MINUTES) {
+        if (bs1) {
+          wminutes++;
+        }
+        if (bs3) {
+          wminutes--;
+        }
       }
-      if (bs3) {
-        wminutes--;
-      }
-    }
 
-    if (whours > 23) {
-      whours = 0;
+      if (whours > 23) {
+        whours = 0;
+      }
+      /*
+      if (whours < 0) {
+        whours = 23;
+      }
+       */
+      if (wminutes > 59) {
+        wminutes = 0;
+      }
+      /*
+      if (wminutes < 0) {
+        wminutes = 59;
+      }
+       */
     }
-    /*
-    if (whours < 0) {
-      whours = 23;
-    }
-     */
-    if (wminutes > 59) {
-      wminutes = 0;
-    }
-    /*
-    if (wminutes < 0) {
-      wminutes = 59;
-    }
-     */
     hmDisplay(whours, wminutes, true);
 
     // reset buttons
@@ -217,6 +220,18 @@ void loop() {
 }
 
 void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) {
+  /*
+  Serial.print("hmDisplay: ");
+  Serial.print(hours);
+  Serial.print(":");
+  Serial.print(minutes);
+  Serial.print(" ");
+  Serial.print(blink);
+  Serial.print(" ");
+  Serial.print(ticks);
+  Serial.print(" ");
+  Serial.println((ticks/500) % 2);
+   */
   if (blink && (ticks/500) % 2) {
     // empty blink cycle
     display.print("    ");
@@ -233,14 +248,18 @@ void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) {
 
 void bs1Click() {
   bs1 = 1;
+  Serial.println("Clicked b1");
 }
 
 void bs2Click() {
   // change mode if BUTTON2 is (newly) pressed
   ++mode;
+  Serial.print("Clicked b2 mode=");
+  Serial.println(mode);
 }
 
 void bs3Click() {
   bs3 = 1;
+  Serial.println("Clicked b3");
 }
 
