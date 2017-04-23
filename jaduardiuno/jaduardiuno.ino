@@ -6,13 +6,14 @@
 #include <Wire.h>
 #include <WireRtcLib.h>
 #include <SevenSegmentTM1637.h>
+#include <OneButton.h>
 
 /*
    Push buttons
 */
-const uint8_t BUTTON1 = 10;
-const uint8_t BUTTON2 = 11;
-const uint8_t BUTTON3 = 12;
+const int BUTTON1 = 10;
+const int BUTTON2 = 11;
+const int BUTTON3 = 12;
 
 /*
    4 digit 7 segment display TM1637 ports
@@ -30,8 +31,6 @@ SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
 
 enum { MODE_CLOCK = 1, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES, MODE_OVERFLOW };
 
-// last state of BUTTON2
-byte lastpress = 0;
 // mode, i.e. state machine state
 byte mode = MODE_CLOCK;
 // RTC hours of day
@@ -55,9 +54,12 @@ long wcounter = 0;
 /*
    Button states (0 or 1)
 */
-int bs1;
-int bs2;
-int bs3;
+OneButton ob1(BUTTON1, false);
+OneButton ob2(BUTTON2, false);
+OneButton ob3(BUTTON3, false);
+int bs1 = 0;
+int bs2 = 0;
+int bs3 = 0;
 
 // run setup code
 void setup() {
@@ -78,6 +80,10 @@ void setup() {
   WireRtcLib::tm* t = rtc.getAlarm();
   whours = t->hour;
   wminutes = t->min;
+
+  ob1.attachClick(bs1Click);
+  ob2.attachClick(bs2Click);
+  ob3.attachClick(bs3Click);
 }
 
 void loop() {
@@ -88,13 +94,13 @@ void loop() {
   seconds = t->sec;
   ticks = millis();
 
-  // read buttons
-  bs1 = digitalRead(BUTTON1);
-  bs2 = digitalRead(BUTTON2);
-  bs3 = digitalRead(BUTTON3);
+  // tick buttons
+  ob1.tick();
+  ob2.tick();
+  ob3.tick();
 
   // change mode if BUTTON2 is (newly) pressed 
-  if ((bs2 == 1) && (lastpress == 0)) {
+  if (bs2) {
     mode++;
   }
   if (mode >= MODE_OVERFLOW) {
@@ -112,7 +118,7 @@ void loop() {
     mode = MODE_CLOCK;
   }
 
-  if (bs1 || (bs2 && !lastpress) || bs3) {
+  if (bs1 || bs2 || bs3) {
     Serial.print(hours);
     Serial.print(":");
     Serial.print(minutes);
@@ -126,9 +132,6 @@ void loop() {
     Serial.print(bs2);
     Serial.print(bs3);
 
-    Serial.print(" lastpress: ");
-    Serial.print(lastpress);
-
     Serial.print(" mode: ");
     Serial.print(mode);
 
@@ -140,11 +143,11 @@ void loop() {
     if (mode == MODE_SET_ALARM_HOURS) {
       if (bs1 == 1) {
         whours--;
-        delay(100);
+        // delay(100);
       }
       if (bs3 == 1) {
         whours++;
-        delay(100);
+        // delay(100);
       }
     }
 
@@ -166,19 +169,23 @@ void loop() {
     if (whours > 23) {
       whours = 0;
     }
+    /*
     if (whours < 0) {
       whours = 23;
     }
+     */
     if (wminutes > 59) {
       wminutes = 0;
     }
+    /*
     if (wminutes < 0) {
       wminutes = 59;
     }
+     */
     hmDisplay(whours, wminutes);
 
-    lastpress = bs2;
-    delay(20);
+    // reset buttons
+    bs1 = bs2 = bs3 = 0;
   }
 
   // check for alarm
@@ -193,9 +200,12 @@ void loop() {
     analogWrite(LED, brightness);
   }
 
-  // turn of alarm (if 'ringing')
-  if (bs1 || bs3) {
+  // turn off alarm (if 'ringing')
+  if (bs1 || bs2 || bs3) {
     wcounter = 0;
+
+    // reset buttons
+    bs1 = bs2 = bs3 = 0;
   }
 
   // display time (if in normal mode)
@@ -213,5 +223,17 @@ void hmDisplay(uint8_t hours, uint8_t minutes) {
   } else {
     display.print(hm);
   }
+}
+
+void bs1Click() {
+  bs1 = 1;
+}
+
+void bs2Click() {
+  bs2 = 1;
+}
+
+void bs3Click() {
+  bs3 = 1;
 }
 
