@@ -56,7 +56,6 @@ OneButton ob1(BUTTON1, false);
 OneButton ob2(BUTTON2, false);
 OneButton ob3(BUTTON3, false);
 int bs1 = 0;
-int bs2 = 0;
 int bs3 = 0;
 
 // run setup code
@@ -97,10 +96,6 @@ void loop() {
   ob2.tick();
   ob3.tick();
 
-  // change mode if BUTTON2 is (newly) pressed 
-  if (bs2) {
-    mode++;
-  }
   if (mode >= MODE_OVERFLOW) {
     // This means that the alarm has set before
     // Write it to eeprom
@@ -116,13 +111,15 @@ void loop() {
     mode = MODE_CLOCK;
   }
 
+  /*
   if (bs2) {
     digitalWrite(LED_BUILTIN, HIGH);
   } else {
     digitalWrite(LED_BUILTIN, LOW);
   }
+   */
 
-  if ((bs1 || bs2 || bs3) && mode > MODE_CLOCK) {
+  if ((bs1 || bs3) && mode > MODE_CLOCK) {
     Serial.print(hours);
     Serial.print(":");
     Serial.print(minutes);
@@ -133,7 +130,7 @@ void loop() {
 
     Serial.print(" buttons: ");
     Serial.print(bs1);
-    Serial.print(bs2);
+    // Serial.print(bs2);
     Serial.print(bs3);
 
     Serial.print(" mode: ");
@@ -183,7 +180,7 @@ void loop() {
     hmDisplay(whours, wminutes, true);
 
     // reset buttons
-    bs1 = bs2 = bs3 = 0;
+    bs1 = bs3 = 0;
   }
 
   // check for alarm
@@ -196,8 +193,7 @@ void loop() {
     // Add one to brightness every second
     int brightness = (ticks - wcounter) / 1000;
     if (brightness > 255) {
-      // end reached
-      wcounter = 0;
+      // max brightness is 255
       brightness = 255;
     }
     analogWrite(LED, brightness);
@@ -210,7 +206,7 @@ void loop() {
     analogWrite(LED, 0);
 
     // reset buttons
-    bs1 = bs2 = bs3 = 0;
+    bs1 = bs3 = 0;
   }
 
   // display time (if in normal mode)
@@ -240,7 +236,8 @@ void bs1Click() {
 }
 
 void bs2Click() {
-  bs2 = 1;
+  // change mode if BUTTON2 is (newly) pressed
+  ++mode;
 }
 
 void bs3Click() {
