@@ -61,6 +61,9 @@ uint8_t wminutes = 0;
 // w: 0 normal, 1: alarm triggered, >1 ticks after alarm
 unsigned long wcounter = 0;
 
+// old brightness (for better logging)
+int oldBrightness = 0;
+
 /*
  Button states (0 or 1)
  */
@@ -102,6 +105,10 @@ void setup() {
   ob1.attachDuringLongPress(bs1DuringLong);
   ob2.attachDuringLongPress(bs2DuringLong);
   ob3.attachDuringLongPress(bs3DuringLong);
+
+  ob1.attachDoubleClick(alarmOff);
+  ob2.attachDoubleClick(alarmOff);
+  ob3.attachDoubleClick(alarmOff);
 }
 
 void loop() {
@@ -178,8 +185,10 @@ void loop() {
   }
 
   // check for alarm
-  if (wcounter == 0 && whours == hours && wminutes == minutes) {
+  // seconds: If we don't check, 'Turn off alarm' will retrigger...
+  if (wcounter == 0 && whours == hours && wminutes == minutes && seconds < 5) {
     wcounter = ticks;
+    Serial.println("Turn on alarm");
   }
 
   // brighten LED
@@ -195,19 +204,22 @@ void loop() {
         brightness = MAX_LED_VALUE;
         digitalWrite(LED_RIGHT, HIGH);
       }
-      // Serial.print("LED power: ");
-      // Serial.println(brightness);
+      if (oldBrightness != brightness) {
+        Serial.print("LED power: ");
+        Serial.println(brightness);
+      }
       analogWrite(LED, brightness);
+      oldBrightness = brightness;
     }
-  }
 
-  // sleep alarm (if 'ringing')
-  if (bs1 || bs3) {
-    ledOff();
-    // power led again in 5min
-    wcounter = ticks + 5 * 60 * 1000;
-    // reset buttons
-    bs1 = bs3 = 0;
+    // sleep alarm (if 'ringing')
+    if (bs1 || bs3) {
+      sleepOnAlarm();
+      // reset buttons
+      bs1 = bs3 = 0;
+
+      Serial.println("Sleep on alarm");
+    }
   }
 
   // display time (if in normal mode)
@@ -292,10 +304,17 @@ void hmSet(uint8_t* h, uint8_t* m, int SET_HOURS, int SET_MINUTES) {
 void ledOff() {
   // end reached
   wcounter = 0;
-  Serial.print("LED power: 0 (off)");
+  Serial.println("LED power: 0 (off)");
   analogWrite(LED, 0);
   digitalWrite(LED_LEFT, LOW);
   digitalWrite(LED_RIGHT, LOW);
+  oldBrightness = 0;
+}
+
+void sleepOnAlarm() {
+  ledOff();
+  // power led again in 5min
+  wcounter = ticks + 5L * 60L * 1000L;
 }
 
 void bs1Click() {
@@ -305,7 +324,9 @@ void bs1Click() {
 
 void bs2Click() {
   // change mode if BUTTON2 is (newly) pressed
-  if (mode == MODE_SET_ALARM_MINUTES) {
+  if (wcounter) {
+    sleepOnAlarm();
+  } else if (mode == MODE_SET_ALARM_MINUTES) {
     // This means that the alarm has set before
     // Write it to eeprom
     WireRtcLib::tm* t = rtc.getAlarm();
@@ -354,6 +375,7 @@ void bs2DuringLong() {
   if (wcounter) {
     // turn off alarm (if 'ringing')
     ledOff();
+    Serial.println("Turn off alarm (2)");
   } else if (mode == MODE_CLOCK) {
     mode = MODE_SET_CLOCK_HOURS;
   }
@@ -362,5 +384,13 @@ void bs2DuringLong() {
 void bs3DuringLong() {
   delay(300);
   ++bs3;
+}
+
+void alarmOff() {
+  if (wcounter) {
+    // turn off alarm (if 'ringing')
+    ledOff();
+    Serial.println("Turn off alarm");
+  }
 }
 
