@@ -118,7 +118,13 @@ void loop() {
     mode = MODE_CLOCK;
   }
 
-  if (bs1 || bs2 || bs3) {
+  if (bs2) {
+    digitalWrite(LED_BUILTIN, HIGH);
+  } else {
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+
+  if ((bs1 || bs2 || bs3) && mode > MODE_CLOCK) {
     Serial.print(hours);
     Serial.print(":");
     Serial.print(minutes);
@@ -141,31 +147,25 @@ void loop() {
     Serial.println(wminutes);
 
     if (mode == MODE_SET_ALARM_HOURS) {
-      if (bs1 == 1) {
+      if (bs1) {
         whours--;
         // delay(100);
       }
-      if (bs3 == 1) {
+      if (bs3) {
         whours++;
         // delay(100);
       }
     }
 
     if (mode == MODE_SET_ALARM_MINUTES) {
-      if (bs1 == 1) {
+      if (bs1) {
         wminutes++;
       }
-      if (bs3 == 1) {
+      if (bs3) {
         wminutes--;
       }
     }
 
-    if (bs2 == 1) {
-      digitalWrite(LED_BUILTIN, HIGH);
-    }
-    if (bs2 == 0) {
-      digitalWrite(LED_BUILTIN, LOW);
-    }
     if (whours > 23) {
       whours = 0;
     }
@@ -189,7 +189,7 @@ void loop() {
   }
 
   // check for alarm
-  if ((whours == hours) && (wminutes == minutes)) {
+  if (whours == hours && wminutes == minutes) {
     wcounter = 1;
   }
 
@@ -197,12 +197,20 @@ void loop() {
   if (wcounter >= 1) {
     wcounter++;
     brightness = wcounter / 100;
+    if (brightness > 255) {
+      // end reached
+      wcounter = 0;
+      brightness = 255;
+    }
     analogWrite(LED, brightness);
   }
 
   // turn off alarm (if 'ringing')
   if (bs1 || bs2 || bs3) {
+    // end reached
     wcounter = 0;
+    brightness = 0;
+    analogWrite(LED, brightness);
 
     // reset buttons
     bs1 = bs2 = bs3 = 0;
