@@ -121,20 +121,21 @@ void loop() {
     Serial.print(" ");
     Serial.print(ticks);
 
-    Serial.print(" buttonstate: ");
+    Serial.print(" buttons: ");
+    Serial.print(bs1);
     Serial.print(bs2);
+    Serial.print(bs3);
 
     Serial.print(" lastpress: ");
     Serial.print(lastpress);
 
-    Serial.print(" setastate: ");
+    Serial.print(" mode: ");
     Serial.print(mode);
 
-    Serial.print(" whours: ");
-    Serial.print(hours);
-
-    Serial.print(" wminutes: ");
-    Serial.println(minutes);
+    Serial.print(" alarm: ");
+    Serial.print(whours);
+    Serial.print(":");
+    Serial.println(wminutes);
 
     if (mode == MODE_SET_ALARM_HOURS) {
       if (bs1 == 1) {
