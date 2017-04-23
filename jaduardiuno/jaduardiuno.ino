@@ -35,7 +35,12 @@ WireRtcLib rtc;
 SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
 
 enum {
-  MODE_CLOCK = 1, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES, MODE_OVERFLOW
+  MODE_CLOCK = 1,
+  MODE_SET_ALARM_HOURS,
+  MODE_SET_ALARM_MINUTES,
+  MODE_SET_CLOCK_HOURS,
+  MODE_SET_CLOCK_MINUTES,
+  MODE_OVERFLOW
 };
 
 // mode, i.e. state machine state
@@ -95,15 +100,21 @@ void setup() {
   ob3.attachClick(bs3Click);
 
   ob1.attachDuringLongPress(bs1DuringLong);
+  ob2.attachDuringLongPress(bs2DuringLong);
   ob3.attachDuringLongPress(bs3DuringLong);
 }
 
 void loop() {
+  bool alarm = mode == MODE_SET_ALARM_HOURS || mode == MODE_SET_ALARM_MINUTES;
+  bool clock = mode == MODE_SET_CLOCK_HOURS || mode == MODE_SET_CLOCK_MINUTES;
+
   // read RTC
   WireRtcLib::tm* t = rtc.getTime();
-  hours = t->hour;
-  minutes = t->min;
-  seconds = t->sec;
+  if (!clock) {
+    hours = t->hour;
+    minutes = t->min;
+    seconds = t->sec;
+  }
   ticks = millis();
 
   // tick buttons
@@ -112,17 +123,6 @@ void loop() {
   ob3.tick();
 
   if (mode >= MODE_OVERFLOW) {
-    // This means that the alarm has set before
-    // Write it to eeprom
-    WireRtcLib::tm* t = rtc.getAlarm();
-    t->hour = whours;
-    t->min = wminutes;
-    //
-    t->mday = 0;
-    t->mon = 0;
-    t->sec = 0;
-    rtc.setAlarm(t);
-
     mode = MODE_CLOCK;
     Serial.println("mode overflow, back to 1");
   }
@@ -158,9 +158,20 @@ void loop() {
       Serial.print(":");
       Serial.println(wminutes);
 
-      hmSet(&whours, &wminutes, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES);
+      if (alarm) {
+        hmSet(&whours, &wminutes, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES);
+      } else if (clock) {
+        hmSet(&hours, &minutes, MODE_SET_CLOCK_HOURS, MODE_SET_CLOCK_MINUTES);
+      } else {
+        Serial.print("Unknown mode:");
+        Serial.println(mode);
+      }
     }
-    hmDisplay(whours, wminutes, true);
+    if (alarm) {
+      hmDisplay(whours, wminutes, true);
+    } else if (clock) {
+      hmDisplay(hours, minutes, true);
+    }
 
     // reset buttons
     bs1 = bs3 = 0;
@@ -175,28 +186,26 @@ void loop() {
   if (wcounter) {
     // Add one to brightness every second
     int brightness = (ticks - wcounter) / 10000;
-    if (brightness > MAX_LED_VALUE / 2) {
-      digitalWrite(LED_LEFT, HIGH);
+    if (brightness >= 0) {
+      if (brightness > MAX_LED_VALUE / 2) {
+        digitalWrite(LED_LEFT, HIGH);
+      }
+      if (brightness > MAX_LED_VALUE) {
+        // max brightness is 255
+        brightness = MAX_LED_VALUE;
+        digitalWrite(LED_RIGHT, HIGH);
+      }
+      // Serial.print("LED power: ");
+      // Serial.println(brightness);
+      analogWrite(LED, brightness);
     }
-    if (brightness > MAX_LED_VALUE) {
-      // max brightness is 255
-      brightness = MAX_LED_VALUE;
-      digitalWrite(LED_RIGHT, HIGH);
-    }
-    Serial.print("LED power: ");
-    Serial.println(brightness);
-    analogWrite(LED, brightness);
   }
 
-  // turn off alarm (if 'ringing')
+  // sleep alarm (if 'ringing')
   if (bs1 || bs3) {
-    // end reached
-    wcounter = 0;
-    Serial.print("LED power: 0 (off)");
-    analogWrite(LED, 0);
-    digitalWrite(LED_LEFT, LOW);
-    digitalWrite(LED_RIGHT, LOW);
-
+    ledOff();
+    // power led again in 5min
+    wcounter = ticks + 5 * 60 * 1000;
     // reset buttons
     bs1 = bs3 = 0;
   }
@@ -280,6 +289,15 @@ void hmSet(uint8_t* h, uint8_t* m, int SET_HOURS, int SET_MINUTES) {
    */
 }
 
+void ledOff() {
+  // end reached
+  wcounter = 0;
+  Serial.print("LED power: 0 (off)");
+  analogWrite(LED, 0);
+  digitalWrite(LED_LEFT, LOW);
+  digitalWrite(LED_RIGHT, LOW);
+}
+
 void bs1Click() {
   bs1 = 1;
   Serial.println("Clicked b1");
@@ -287,7 +305,37 @@ void bs1Click() {
 
 void bs2Click() {
   // change mode if BUTTON2 is (newly) pressed
-  ++mode;
+  if (mode == MODE_SET_ALARM_MINUTES) {
+    // This means that the alarm has set before
+    // Write it to eeprom
+    WireRtcLib::tm* t = rtc.getAlarm();
+    t->hour = whours;
+    t->min = wminutes;
+    //
+    t->mday = 0;
+    t->mon = 0;
+    t->sec = 0;
+    rtc.setAlarm(t);
+    Serial.println("Alarm saved to eeprom");
+
+    mode = MODE_OVERFLOW;
+  } else if (mode == MODE_SET_CLOCK_MINUTES) {
+    // This means that the clock has set before
+    // Write it to eeprom
+    WireRtcLib::tm* t = rtc.getTime();
+    t->hour = hours;
+    t->min = minutes;
+    //
+    t->mday = 0;
+    t->mon = 0;
+    t->sec = 0;
+    rtc.setTime(t);
+    Serial.println("Clock saved to eeprom");
+
+    mode = MODE_OVERFLOW;
+  } else {
+    ++mode;
+  }
   Serial.print("Clicked b2 mode=");
   Serial.println(mode);
 }
@@ -300,6 +348,15 @@ void bs3Click() {
 void bs1DuringLong() {
   delay(300);
   ++bs1;
+}
+
+void bs2DuringLong() {
+  if (wcounter) {
+    // turn off alarm (if 'ringing')
+    ledOff();
+  } else if (mode == MODE_CLOCK) {
+    mode = MODE_SET_CLOCK_HOURS;
+  }
 }
 
 void bs3DuringLong() {
