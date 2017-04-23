@@ -25,6 +25,8 @@ const uint8_t PIN_DIO = 5;   // define DIO pin (any digital pin)
    power LED port
 */
 const uint8_t LED = 9;
+// Must be between 0 and 255, however, our experiments show that there is no change above ~20.
+const int MAX_LED_VALUE = 30;
 
 WireRtcLib rtc;
 SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
@@ -198,10 +200,12 @@ void loop() {
   if (wcounter) {
     // Add one to brightness every second
     int brightness = (ticks - wcounter) / 10000;
-    if (brightness > 255) {
+    if (brightness > MAX_LED_VALUE) {
       // max brightness is 255
-      brightness = 255;
+      brightness = MAX_LED_VALUE;
     }
+    Serial.print("LED power: ");
+    Serial.println(brightness);
     analogWrite(LED, brightness);
   }
 
@@ -209,6 +213,7 @@ void loop() {
   if (bs1 || bs3) {
     // end reached
     wcounter = 0;
+    Serial.print("LED power: 0 (off)");
     analogWrite(LED, 0);
 
     // reset buttons
