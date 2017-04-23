@@ -2,7 +2,7 @@
 //This is a automatic generated file
 //Please do not modify this file
 //If you touch this file your change will be overwritten during the next build
-//This file has been generated on 2017-04-23 17:38:31
+//This file has been generated on 2017-04-23 17:46:36
 
 #include "Arduino.h"
 #include <Wire.h>
@@ -12,6 +12,7 @@
 void setup() ;
 void loop() ;
 void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) ;
+void hmSet(uint8_t* h, uint8_t* m, int SET_HOURS, int SET_MINUTES) ;
 void bs1Click() ;
 void bs2Click() ;
 void bs3Click() ;

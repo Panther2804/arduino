@@ -1,29 +1,29 @@
 /**
-   Projekt: Tageslichtwecker
+ Projekt: Tageslichtwecker
 
-   Paul Ole und Thomas Pasch
-*/
+ Paul Ole und Thomas Pasch
+ */
 #include <Wire.h>
 #include <WireRtcLib.h>
 #include <SevenSegmentTM1637.h>
 #include <OneButton.h>
 
 /*
-   Push buttons
-*/
+ Push buttons
+ */
 const int BUTTON1 = 10;
 const int BUTTON2 = 11;
 const int BUTTON3 = 12;
 
 /*
-   4 digit 7 segment display TM1637 ports
-*/
+ 4 digit 7 segment display TM1637 ports
+ */
 const uint8_t PIN_CLK = 4;   // define CLK pin (any digital pin)
 const uint8_t PIN_DIO = 5;   // define DIO pin (any digital pin)
 
 /*
-   power LED port
-*/
+ power LED port
+ */
 const uint8_t LED = 9;
 // Must be between 0 and 255, however, our experiments show that there is no change above ~20.
 const int MAX_LED_VALUE = 30;
@@ -34,7 +34,9 @@ const uint8_t LED_RIGHT = 3;
 WireRtcLib rtc;
 SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
 
-enum { MODE_CLOCK = 1, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES, MODE_OVERFLOW };
+enum {
+  MODE_CLOCK = 1, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES, MODE_OVERFLOW
+};
 
 // mode, i.e. state machine state
 byte mode = MODE_CLOCK;
@@ -55,8 +57,8 @@ uint8_t wminutes = 0;
 unsigned long wcounter = 0;
 
 /*
-   Button states (0 or 1)
-*/
+ Button states (0 or 1)
+ */
 OneButton ob1(BUTTON1, false);
 OneButton ob2(BUTTON2, false);
 OneButton ob3(BUTTON3, false);
@@ -126,11 +128,11 @@ void loop() {
   }
 
   /*
-  if (bs2) {
-    digitalWrite(LED_BUILTIN, HIGH);
-  } else {
-    digitalWrite(LED_BUILTIN, LOW);
-  }
+   if (bs2) {
+   digitalWrite(LED_BUILTIN, HIGH);
+   } else {
+   digitalWrite(LED_BUILTIN, LOW);
+   }
    */
 
   if (mode > MODE_CLOCK && mode < MODE_OVERFLOW) {
@@ -156,42 +158,7 @@ void loop() {
       Serial.print(":");
       Serial.println(wminutes);
 
-      if (mode == MODE_SET_ALARM_HOURS) {
-        if (bs1) {
-          whours += bs1;
-          // delay(100);
-        }
-        if (bs3) {
-          whours -= bs3;
-          // delay(100);
-        }
-      }
-
-      if (mode == MODE_SET_ALARM_MINUTES) {
-        if (bs1) {
-          wminutes += bs1;
-        }
-        if (bs3) {
-          wminutes -= bs3;
-        }
-      }
-
-      if (whours > 23) {
-        whours = 0;
-      }
-      /*
-      if (whours < 0) {
-        whours = 23;
-      }
-       */
-      if (wminutes > 59) {
-        wminutes = 0;
-      }
-      /*
-      if (wminutes < 0) {
-        wminutes = 59;
-      }
-       */
+      hmSet(&whours, &wminutes, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES);
     }
     hmDisplay(whours, wminutes, true);
 
@@ -243,18 +210,18 @@ void loop() {
 
 void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) {
   /*
-  Serial.print("hmDisplay: ");
-  Serial.print(hours);
-  Serial.print(":");
-  Serial.print(minutes);
-  Serial.print(" ");
-  Serial.print(blink);
-  Serial.print(" ");
-  Serial.print(ticks);
-  Serial.print(" ");
-  Serial.println((ticks/500) % 2);
+   Serial.print("hmDisplay: ");
+   Serial.print(hours);
+   Serial.print(":");
+   Serial.print(minutes);
+   Serial.print(" ");
+   Serial.print(blink);
+   Serial.print(" ");
+   Serial.print(ticks);
+   Serial.print(" ");
+   Serial.println((ticks/500) % 2);
    */
-  if (blink && (ticks/500) % 2) {
+  if (blink && (ticks / 500) % 2) {
     // empty blink cycle
     display.print("    ");
   } else {
@@ -272,6 +239,45 @@ void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) {
       display.print(hm);
     }
   }
+}
+
+void hmSet(uint8_t* h, uint8_t* m, int SET_HOURS, int SET_MINUTES) {
+  if (mode == SET_HOURS) {
+    if (bs1) {
+      *h += bs1;
+      // delay(100);
+    }
+    if (bs3) {
+      *h -= bs3;
+      // delay(100);
+    }
+  }
+
+  if (mode == SET_MINUTES) {
+    if (bs1) {
+      *m += bs1;
+    }
+    if (bs3) {
+      *m -= bs3;
+    }
+  }
+
+  if (*h > 23) {
+    *h = 0;
+  }
+  /*
+   if (whours < 0) {
+   whours = 23;
+   }
+   */
+  if (*m > 59) {
+    *m = 0;
+  }
+  /*
+   if (wminutes < 0) {
+   wminutes = 59;
+   }
+   */
 }
 
 void bs1Click() {
