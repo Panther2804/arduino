@@ -81,6 +81,9 @@ void setup() {
   ob1.attachClick(bs1Click);
   ob2.attachClick(bs2Click);
   ob3.attachClick(bs3Click);
+
+  ob1.attachDuringLongPress(bs1DuringLong);
+  ob3.attachDuringLongPress(bs3DuringLong);
 }
 
 void loop() {
@@ -145,21 +148,21 @@ void loop() {
 
       if (mode == MODE_SET_ALARM_HOURS) {
         if (bs1) {
-          whours--;
+          whours += bs1;
           // delay(100);
         }
         if (bs3) {
-          whours++;
+          whours -= bs3;
           // delay(100);
         }
       }
 
       if (mode == MODE_SET_ALARM_MINUTES) {
         if (bs1) {
-          wminutes++;
+          wminutes += bs1;
         }
         if (bs3) {
-          wminutes--;
+          wminutes -= bs3;
         }
       }
 
@@ -187,14 +190,14 @@ void loop() {
   }
 
   // check for alarm
-  if (whours == hours && wminutes == minutes) {
+  if (wcounter == 0 && whours == hours && wminutes == minutes) {
     wcounter = ticks;
   }
 
   // brighten LED
   if (wcounter) {
     // Add one to brightness every second
-    int brightness = (ticks - wcounter) / 1000;
+    int brightness = (ticks - wcounter) / 10000;
     if (brightness > 255) {
       // max brightness is 255
       brightness = 255;
@@ -237,7 +240,13 @@ void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) {
     display.print("    ");
   } else {
     int hm = hours * 100 + minutes;
-    if (hm < 1000) {
+    if (hm < 10) {
+      String s = String("000") + String(hm);
+      display.print(s);
+    } else if (hm < 100) {
+      String s = String("00") + String(hm);
+      display.print(s);
+    } else if (hm < 1000) {
       String s = String('0') + String(hm);
       display.print(s);
     } else {
@@ -261,5 +270,15 @@ void bs2Click() {
 void bs3Click() {
   bs3 = 1;
   Serial.println("Clicked b3");
+}
+
+void bs1DuringLong() {
+  delay(300);
+  ++bs1;
+}
+
+void bs3DuringLong() {
+  delay(300);
+  ++bs3;
 }
 
