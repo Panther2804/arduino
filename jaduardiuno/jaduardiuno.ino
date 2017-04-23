@@ -33,7 +33,7 @@ enum { MODE_CLOCK = 1, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES, MODE_OVERFL
 // last state of BUTTON2
 byte lastpress = 0;
 // mode, i.e. state machine state
-byte setmode = MODE_CLOCK;
+byte mode = MODE_CLOCK;
 // RTC hours of day
 uint8_t hours;
 // RTC minutes of hour
@@ -90,10 +90,10 @@ void loop() {
 
   // change mode if BUTTON2 is (newly) pressed 
   if ((bs2 == 1) && (lastpress == 0)) {
-    setmode++;
+    mode++;
   }
-  if (setmode >= MODE_OVERFLOW) {
-    setmode = MODE_CLOCK;
+  if (mode >= MODE_OVERFLOW) {
+    mode = MODE_CLOCK;
   }
 
   if (bs1 || (bs2 && !lastpress) || bs3) {
@@ -112,7 +112,7 @@ void loop() {
     Serial.print(lastpress);
 
     Serial.print(" setastate: ");
-    Serial.print(setmode);
+    Serial.print(mode);
 
     Serial.print(" whours: ");
     Serial.print(hours);
@@ -120,7 +120,7 @@ void loop() {
     Serial.print(" wminutes: ");
     Serial.println(minutes);
 
-    if (setmode == MODE_SET_ALARM_HOURS) {
+    if (mode == MODE_SET_ALARM_HOURS) {
       if (bs1 == 1) {
         whours--;
         delay(100);
@@ -131,7 +131,7 @@ void loop() {
       }
     }
 
-    if (setmode == MODE_SET_ALARM_MINUTES) {
+    if (mode == MODE_SET_ALARM_MINUTES) {
       if (bs1 == 1) {
         wminutes++;
       }
@@ -182,7 +182,7 @@ void loop() {
   }
 
   // display time (if in normal mode)
-  if (setmode == MODE_CLOCK) {
+  if (mode == MODE_CLOCK) {
     hmDisplay(hours, minutes);
   }
   delay(20);
