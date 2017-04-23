@@ -10,20 +10,20 @@
 /*
    Push buttons
 */
-const byte BUTTON1 = 10;
-const byte BUTTON2 = 11;
-const byte BUTTON3 = 12;
+const uint8_t BUTTON1 = 10;
+const uint8_t BUTTON2 = 11;
+const uint8_t BUTTON3 = 12;
 
 /*
    4 digit 7 segment display TM1637 ports
 */
-const byte PIN_CLK = 4;   // define CLK pin (any digital pin)
-const byte PIN_DIO = 5;   // define DIO pin (any digital pin)
+const uint8_t PIN_CLK = 4;   // define CLK pin (any digital pin)
+const uint8_t PIN_DIO = 5;   // define DIO pin (any digital pin)
 
 /*
    power LED port
 */
-const int LED = 9;
+const uint8_t LED = 9;
 
 WireRtcLib rtc;
 SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
@@ -44,9 +44,9 @@ uint8_t seconds;
 unsigned long ticks;
 
 // wake/alarm hours of day
-short whours = 0;
+uint8_t whours = 0;
 // wake/alarm minutes of hour
-short wminutes = 0;
+uint8_t wminutes = 0;
 // brightness (between 0 and 255)
 uint8_t brightness = 0;
 // w: 0 normal, 1: alarm triggered, >1 ticks after alarm
@@ -55,9 +55,9 @@ long wcounter = 0;
 /*
    Button states (0 or 1)
 */
-byte bs1;
-byte bs2;
-byte bs3;
+int bs1;
+int bs2;
+int bs3;
 
 // run setup code
 void setup() {
