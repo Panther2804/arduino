@@ -46,10 +46,8 @@ unsigned long ticks;
 uint8_t whours = 0;
 // wake/alarm minutes of hour
 uint8_t wminutes = 0;
-// brightness (between 0 and 255)
-uint8_t brightness = 0;
 // w: 0 normal, 1: alarm triggered, >1 ticks after alarm
-long wcounter = 0;
+unsigned long wcounter = 0;
 
 /*
    Button states (0 or 1)
@@ -182,7 +180,7 @@ void loop() {
       wminutes = 59;
     }
      */
-    hmDisplay(whours, wminutes);
+    hmDisplay(whours, wminutes, true);
 
     // reset buttons
     bs1 = bs2 = bs3 = 0;
@@ -190,13 +188,13 @@ void loop() {
 
   // check for alarm
   if (whours == hours && wminutes == minutes) {
-    wcounter = 1;
+    wcounter = ticks;
   }
 
   // brighten LED
-  if (wcounter >= 1) {
-    wcounter++;
-    brightness = wcounter / 100;
+  if (wcounter) {
+    // Add one to brightness every second
+    int brightness = (ticks - wcounter) / 1000;
     if (brightness > 255) {
       // end reached
       wcounter = 0;
@@ -206,11 +204,10 @@ void loop() {
   }
 
   // turn off alarm (if 'ringing')
-  if (bs1 || bs2 || bs3) {
+  if (bs1 || bs3) {
     // end reached
     wcounter = 0;
-    brightness = 0;
-    analogWrite(LED, brightness);
+    analogWrite(LED, 0);
 
     // reset buttons
     bs1 = bs2 = bs3 = 0;
@@ -218,18 +215,23 @@ void loop() {
 
   // display time (if in normal mode)
   if (mode == MODE_CLOCK) {
-    hmDisplay(hours, minutes);
+    hmDisplay(hours, minutes, false);
   }
   delay(20);
 }
 
-void hmDisplay(uint8_t hours, uint8_t minutes) {
-  int hm = hours * 100 + minutes;
-  if (hm < 1000) {
-    String s = String('0') + String(hm);
-    display.print(s);
+void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) {
+  if (blink && (ticks/500) % 2) {
+    // empty blink cycle
+    display.print("    ");
   } else {
-    display.print(hm);
+    int hm = hours * 100 + minutes;
+    if (hm < 1000) {
+      String s = String('0') + String(hm);
+      display.print(s);
+    } else {
+      display.print(hm);
+    }
   }
 }
 
