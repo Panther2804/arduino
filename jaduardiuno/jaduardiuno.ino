@@ -41,7 +41,7 @@ uint8_t minutes;
 // RTC seconds of minute
 uint8_t seconds;
 // RTC ticks
-time_t ticks;
+unsigned long ticks;
 
 // wake/alarm hours of day
 short whours = 0;
@@ -73,6 +73,11 @@ void setup() {
   pinMode(BUTTON2, INPUT);
   pinMode(BUTTON3, INPUT);
   pinMode(LED, OUTPUT);
+
+  // read RTC alarm (this is in eeprom hence persistent)
+  WireRtcLib::tm* t = rtc.getAlarm();
+  whours = t->hour;
+  wminutes = t->min;
 }
 
 void loop() {
@@ -81,7 +86,7 @@ void loop() {
   hours = t->hour;
   minutes = t->min;
   seconds = t->sec;
-  ticks = rtc.makeTime(t);
+  ticks = millis();
 
   // read buttons
   bs1 = digitalRead(BUTTON1);
@@ -93,6 +98,17 @@ void loop() {
     mode++;
   }
   if (mode >= MODE_OVERFLOW) {
+    // This means that the alarm has set before
+    // Write it to eeprom
+    WireRtcLib::tm* t = rtc.getAlarm();
+    t->hour = whours;
+    t->min = wminutes;
+    //
+    t->mday = 0;
+    t->mon = 0;
+    t->sec = 0;
+    rtc.setAlarm(t);
+
     mode = MODE_CLOCK;
   }
 
