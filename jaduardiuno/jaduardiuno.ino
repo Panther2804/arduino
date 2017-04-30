@@ -352,8 +352,10 @@ void sleepOnAlarm() {
 }
 
 void bs1Click() {
-  bs1 = 1;
-  Serial.println("Clicked b1");
+  if (mode != Mode::MODE_CLOCK) {
+    bs1 = 1;
+    Serial.println("Clicked b1");
+  }
 }
 
 void bs2Click() {
@@ -397,13 +399,17 @@ void bs2Click() {
 }
 
 void bs3Click() {
-  bs3 = 1;
-  Serial.println("Clicked b3");
+  if (mode != Mode::MODE_CLOCK) {
+    bs3 = 1;
+    Serial.println("Clicked b3");
+  }
 }
 
 void bs1DuringLong() {
-  delay(300);
-  ++bs1;
+  if (mode != Mode::MODE_CLOCK) {
+    delay(300);
+    ++bs1;
+  }
 }
 
 void bs2DuringLong() {
@@ -417,8 +423,10 @@ void bs2DuringLong() {
 }
 
 void bs3DuringLong() {
-  delay(300);
-  ++bs3;
+  if (mode != Mode::MODE_CLOCK) {
+    delay(300);
+    ++bs3;
+  }
 }
 
 void alarmOff() {
@@ -427,9 +435,14 @@ void alarmOff() {
     ledOff();
     Serial.println("alarmOff: Turn off alarm");
   } else {
-    alarm ^= 1;
-    colon();
-    Serial.println("alarmOff: Alarm is now " + alarm ? "on" : "off");
+    if (mode != Mode::MODE_CLOCK) {
+      // reset mode
+      mode = Mode::MODE_CLOCK;
+    } else {
+      alarm = !alarm;
+      colon();
+      Serial.println("alarmOff: Alarm is now " + alarm ? "on" : "off");
+    }
   }
 }
 
