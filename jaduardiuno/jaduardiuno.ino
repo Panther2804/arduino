@@ -72,8 +72,12 @@ unsigned long ticks;
 uint8_t whours = 0;
 // wake/alarm minutes of hour
 uint8_t wminutes = 0;
-// w: 0 normal, 1: alarm triggered, >1 ticks after alarm
+// w: 0 normal, >0: ticks for start of alarm
 unsigned long wcounter = 0;
+
+// w: 0 MODE_CLOCK, >0 ticks when non-MODE_CLOCK (mode != MODE_CLOCK) has been entered
+unsigned long nonClockMode = 0;
+const long NON_CLOCK_MODE_STAY_TIME = 60 * 1000;
 
 // old brightness (for better logging)
 int oldBrightness = 0;
@@ -91,6 +95,8 @@ int bs3 = 0;
  * Weather the alarm is ON or OFF
  */
 bool alarm = true;
+// EEPROM addr for storing alarm (value)
+const int EEPROM_ALARM_ADR = 0;
 
 /**
  * LED could be switched on manually!
@@ -173,6 +179,14 @@ void loop() {
     mode = Mode::MODE_CLOCK;
     Serial.println("mode overflow, back to 1");
   }
+  if (nonClockMode) {
+    long interval = ticks - nonClockMode;
+    if (interval >= NON_CLOCK_MODE_STAY_TIME) {
+      // reset to clock mode
+      mode = Mode::MODE_CLOCK;
+      Serial.println("Timeout: reset to MODE_CLOCK");
+    }
+  }
 
   if (manuallyLedValue) {
     if (manuallyLedValue < 0) {
@@ -197,6 +211,9 @@ void loop() {
    */
 
   if (mode > Mode::MODE_CLOCK && mode < Mode::MODE_OVERFLOW) {
+    if (!nonClockMode) {
+      nonClockMode = ticks;
+    }
     if (bs1 || bs3) {
       Serial.print(hours);
       Serial.print(":");
@@ -236,6 +253,8 @@ void loop() {
 
     // reset buttons
     bs1 = bs3 = 0;
+  } else {
+    nonClockMode = 0;
   }
 
   // check for alarm
@@ -363,12 +382,14 @@ void ledOff() {
   digitalWrite(LED_LEFT, LOW);
   digitalWrite(LED_RIGHT, LOW);
   oldBrightness = 0;
+  Serial.println("LED off");
 }
 
 void sleepOnAlarm() {
   ledOff();
   // power led again in 5min
   wcounter = ticks + 5L * 60L * 1000L;
+  Serial.println("Alarm is sleeping for 5 min");
 }
 
 void bs1Click() {
@@ -378,6 +399,8 @@ void bs1Click() {
   } else {
     delay(300);
     manuallyLedValue = 1;
+    Serial.print("manually LED ");
+    Serial.println(manuallyLedValue);
   }
 }
 
@@ -428,6 +451,8 @@ void bs3Click() {
   } else {
     delay(300);
     manuallyLedValue = 1;
+    Serial.print("manually LED ");
+    Serial.println(manuallyLedValue);
   }
 }
 
@@ -438,6 +463,8 @@ void bs1DuringLong() {
   } else {
     delay(300);
     ++manuallyLedValue;
+    Serial.print("manually LED ");
+    Serial.println(manuallyLedValue);
   }
 }
 
@@ -458,6 +485,8 @@ void bs3DuringLong() {
   } else {
     delay(300);
     --manuallyLedValue;
+    Serial.print("manually LED ");
+    Serial.println(manuallyLedValue);
   }
 }
 
@@ -470,10 +499,12 @@ void alarmOff() {
     if (mode != Mode::MODE_CLOCK) {
       // reset mode
       mode = Mode::MODE_CLOCK;
+      Serial.println("alarmOff: Mode is now MODE_CLOCK");
     } else if (manuallyLedValue) {
       manuallyLedValue = 0;
       oldBrightness = 0;
       analogWrite(LED, 0);
+      Serial.println("alarmOff: switched off manually LED");
     } else {
       alarm = !alarm;
       colon();
