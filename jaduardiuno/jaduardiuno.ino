@@ -73,11 +73,11 @@ uint8_t whours = 0;
 // wake/alarm minutes of hour
 uint8_t wminutes = 0;
 // w: 0 normal, >0: ticks for start of alarm
-unsigned long wcounter = 0;
+unsigned long wcounter = 0L;
 
 // w: 0 MODE_CLOCK, >0 ticks when non-MODE_CLOCK (mode != MODE_CLOCK) has been entered
-unsigned long nonClockMode = 0;
-const long NON_CLOCK_MODE_STAY_TIME = 60 * 1000;
+unsigned long nonClockMode = 0L;
+const unsigned long NON_CLOCK_MODE_STAY_TIME = 60L * 1000L;
 
 // old brightness (for better logging)
 int oldBrightness = 0;
@@ -94,7 +94,7 @@ int bs3 = 0;
 /**
  * Weather the alarm is ON or OFF
  */
-bool alarm = true;
+bool isAlarmEnabled = true;
 // EEPROM addr for storing alarm (value)
 const int EEPROM_ALARM_ADR = 0;
 
@@ -134,6 +134,10 @@ void setup() {
   WireRtcLib::tm* t = rtc.getAlarm();
   whours = t->hour;
   wminutes = t->min;
+
+  // read isAlarmEnabled from EEPROM
+  isAlarmEnabled = (bool) EEPROM.read(EEPROM_ALARM_ADR);
+  colon();
 
   ob1.attachClick(bs1Click);
   ob2.attachClick(bs2Click);
@@ -180,11 +184,12 @@ void loop() {
     Serial.println("mode overflow, back to 1");
   }
   if (nonClockMode) {
-    long interval = ticks - nonClockMode;
+    unsigned long interval = ticks - nonClockMode;
     if (interval >= NON_CLOCK_MODE_STAY_TIME) {
       // reset to clock mode
       mode = Mode::MODE_CLOCK;
-      Serial.println("Timeout: reset to MODE_CLOCK");
+      Serial.print("Timeout: reset to MODE_CLOCK ");
+      Serial.println(interval / 1000);
     }
   }
 
@@ -259,7 +264,7 @@ void loop() {
 
   // check for alarm
   // seconds: If we don't check, 'Turn off alarm' will retrigger...
-  if (alarm && wcounter == 0 && whours == hours && wminutes == minutes && seconds < 4) {
+  if (isAlarmEnabled && wcounter == 0 && whours == hours && wminutes == minutes && seconds < 4) {
     wcounter = ticks;
     Serial.println("Turn on alarm");
   }
@@ -506,14 +511,17 @@ void alarmOff() {
       analogWrite(LED, 0);
       Serial.println("alarmOff: switched off manually LED");
     } else {
-      alarm = !alarm;
+      isAlarmEnabled = !isAlarmEnabled;
+      EEPROM.write(EEPROM_ALARM_ADR, (byte) isAlarmEnabled);
       colon();
-      Serial.println("alarmOff: Alarm is now " + alarm ? "on" : "off");
+      String msg = String("alarmOff: Alarm is now ");
+      msg += isAlarmEnabled ? String("on") : String("off");
+      Serial.println(msg);
     }
   }
 }
 
 void colon() {
-  display.setColonOn(alarm);
+  display.setColonOn(isAlarmEnabled);
 }
 
