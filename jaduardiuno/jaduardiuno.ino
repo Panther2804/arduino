@@ -20,6 +20,9 @@ const int BUTTON3 = 12;
  */
 const uint8_t PIN_CLK = 4;   // define CLK pin (any digital pin)
 const uint8_t PIN_DIO = 5;   // define DIO pin (any digital pin)
+// brightness: only 0, 10, 20, 30, 40, 50, 60, 70, 80
+const uint8_t SEVEN_SEGMENT_BRIGHTNESS_DAY = 50;
+const uint8_t SEVEN_SEGMENT_BRIGHTNESS_NIGHT = 10;
 
 /*
  power LED port
@@ -30,6 +33,8 @@ const int MAX_LED_VALUE = 30;
 
 const uint8_t LED_LEFT = 2;
 const uint8_t LED_RIGHT = 3;
+// on on LED_LEFT and LED_RIGHT is analog (0-255)
+const int LED_LR_ON_VALUE = 10;
 
 WireRtcLib rtc;
 SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
@@ -80,7 +85,7 @@ void setup() {
 
   Serial.begin(9600);         // initializes the Serial connection @ 9600 baud
   display.begin();            // initializes the display
-  display.setBacklight(100);  // set the brightness to 100 %
+  display.setBacklight(SEVEN_SEGMENT_BRIGHTNESS_DAY);  // set the brightness
   display.print("RDY");      // display INIT on the display
 
   pinMode(BUTTON1, INPUT);
@@ -92,6 +97,11 @@ void setup() {
 
   digitalWrite(LED_LEFT, LOW);
   digitalWrite(LED_RIGHT, LOW);
+
+  // testing only
+  // analogWrite(LED_LEFT, LED_LR_ON_VALUE);
+  // analogWrite(LED_RIGHT, LED_LR_ON_VALUE);
+  // display.setBacklight(SEVEN_SEGMENT_BRIGHTNESS_NIGHT);
 
   // read RTC alarm (this is in eeprom hence persistent)
   WireRtcLib::tm* t = rtc.getAlarm();
@@ -128,6 +138,15 @@ void loop() {
   ob1.tick();
   ob2.tick();
   ob3.tick();
+
+  // day and night brightness
+  if (seconds == 0) {
+    if (hours >= 9 && hours <= 21) {
+      display.setBacklight(SEVEN_SEGMENT_BRIGHTNESS_DAY);
+    } else {
+      display.setBacklight(SEVEN_SEGMENT_BRIGHTNESS_NIGHT);
+    }
+  }
 
   if (mode >= MODE_OVERFLOW) {
     mode = MODE_CLOCK;
@@ -197,12 +216,12 @@ void loop() {
     int brightness = (ticks - wcounter) / 10000;
     if (brightness >= 0) {
       if (brightness > MAX_LED_VALUE / 2) {
-        digitalWrite(LED_LEFT, HIGH);
+        analogWrite(LED_LEFT, LED_LR_ON_VALUE);
       }
       if (brightness > MAX_LED_VALUE) {
         // max brightness is 255
         brightness = MAX_LED_VALUE;
-        digitalWrite(LED_RIGHT, HIGH);
+        analogWrite(LED_RIGHT, LED_LR_ON_VALUE);
       }
       if (oldBrightness != brightness) {
         Serial.print("LED power: ");
