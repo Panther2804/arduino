@@ -27,6 +27,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/Akafugu_WireRtc_Library}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/OneButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/OneButton/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/EEPROM}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/EEPROM/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.748069865" name="CPP source files" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
@@ -40,6 +42,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/Akafugu_WireRtc_Library}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/OneButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/OneButton/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/EEPROM}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/EEPROM/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.238203598" name="C Source Files" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
@@ -53,6 +57,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/Akafugu_WireRtc_Library}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/OneButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/OneButton/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/EEPROM}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/jaduardiuno/libraries/EEPROM/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.2099305602" name="Assembly source files" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>

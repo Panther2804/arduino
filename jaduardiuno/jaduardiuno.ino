@@ -4,6 +4,7 @@
  Paul Ole und Thomas Pasch
  */
 #include "jaduardiuno.h"
+#include <EEPROM.h>
 #include <Wire.h>
 #include <WireRtcLib.h>
 #include <SevenSegmentTM1637.h>
@@ -91,6 +92,11 @@ int bs3 = 0;
  */
 bool alarm = true;
 
+/**
+ * LED could be switched on manually!
+ */
+int manuallyLedValue = 0;
+
 // run setup code
 void setup() {
   Wire.begin();
@@ -168,6 +174,20 @@ void loop() {
     Serial.println("mode overflow, back to 1");
   }
 
+  if (manuallyLedValue) {
+    if (manuallyLedValue < 0) {
+      manuallyLedValue = 0;
+    } else if (manuallyLedValue > MAX_LED_VALUE) {
+      manuallyLedValue = MAX_LED_VALUE;
+    }
+    analogWrite(LED, manuallyLedValue);
+    if (oldBrightness != manuallyLedValue) {
+      Serial.print("manually set LED power: ");
+      Serial.println(manuallyLedValue);
+      oldBrightness = manuallyLedValue;
+    }
+  }
+
   /*
    if (bs2) {
    digitalWrite(LED_BUILTIN, HIGH);
@@ -230,10 +250,10 @@ void loop() {
     // Add one to brightness every second
     int brightness = (ticks - wcounter) / 10000;
     if (brightness >= 0) {
-      if (brightness > MAX_LED_VALUE / 2) {
+      if (brightness > MAX_LED_VALUE / 4) {
         analogWrite(LED_LEFT, LED_LR_ON_VALUE);
       }
-      if (brightness > MAX_LED_VALUE) {
+      if (brightness > MAX_LED_VALUE / 2) {
         // max brightness is 255
         brightness = MAX_LED_VALUE;
         analogWrite(LED_RIGHT, LED_LR_ON_VALUE);
@@ -355,6 +375,9 @@ void bs1Click() {
   if (mode != Mode::MODE_CLOCK) {
     bs1 = 1;
     Serial.println("Clicked b1");
+  } else {
+    delay(300);
+    manuallyLedValue = 1;
   }
 }
 
@@ -402,6 +425,9 @@ void bs3Click() {
   if (mode != Mode::MODE_CLOCK) {
     bs3 = 1;
     Serial.println("Clicked b3");
+  } else {
+    delay(300);
+    manuallyLedValue = 1;
   }
 }
 
@@ -409,6 +435,9 @@ void bs1DuringLong() {
   if (mode != Mode::MODE_CLOCK) {
     delay(300);
     ++bs1;
+  } else {
+    delay(300);
+    ++manuallyLedValue;
   }
 }
 
@@ -426,6 +455,9 @@ void bs3DuringLong() {
   if (mode != Mode::MODE_CLOCK) {
     delay(300);
     ++bs3;
+  } else {
+    delay(300);
+    --manuallyLedValue;
   }
 }
 
@@ -438,6 +470,10 @@ void alarmOff() {
     if (mode != Mode::MODE_CLOCK) {
       // reset mode
       mode = Mode::MODE_CLOCK;
+    } else if (manuallyLedValue) {
+      manuallyLedValue = 0;
+      oldBrightness = 0;
+      analogWrite(LED, 0);
     } else {
       alarm = !alarm;
       colon();

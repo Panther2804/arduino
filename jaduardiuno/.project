@@ -47,6 +47,11 @@
 			<location>/home/tpasch/Arduino/libraries/Akafugu_WireRtc_Library</location>
 		</link>
 		<link>
+			<name>libraries/EEPROM</name>
+			<type>2</type>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/arduino/hardware/avr/1.6.18/libraries/EEPROM</locationURI>
+		</link>
+		<link>
 			<name>libraries/OneButton</name>
 			<type>2</type>
 			<location>/home/tpasch/Arduino/libraries/OneButton</location>
