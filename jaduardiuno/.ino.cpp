@@ -2,7 +2,7 @@
 //This is a automatic generated file
 //Please do not modify this file
 //If you touch this file your change will be overwritten during the next build
-//This file has been generated on 2017-04-30 12:19:07
+//This file has been generated on 2017-04-30 12:39:59
 
 #include "Arduino.h"
 #include "jaduardiuno.h"
@@ -10,7 +10,7 @@
 #include <WireRtcLib.h>
 #include <SevenSegmentTM1637.h>
 #include <OneButton.h>
-Mode operator++(Mode& m) ;
+Mode& operator++(Mode& m) ;
 void setup() ;
 void loop() ;
 void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) ;
@@ -24,6 +24,7 @@ void bs1DuringLong() ;
 void bs2DuringLong() ;
 void bs3DuringLong() ;
 void alarmOff() ;
+void colon() ;
 
 #include "jaduardiuno.ino"
 

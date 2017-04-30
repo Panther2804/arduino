@@ -50,7 +50,7 @@ enum struct Mode {
 };
 
 // pre-increment, see http://en.cppreference.com/w/cpp/language/operator_incdec
-Mode operator++(Mode& m) {
+Mode& operator++(Mode& m) {
   int next = (int) m;
   m = (Mode) (next + 1);
   return m;
@@ -86,6 +86,11 @@ OneButton ob3(BUTTON3, false);
 int bs1 = 0;
 int bs3 = 0;
 
+/**
+ * Weather the alarm is ON or OFF
+ */
+bool alarm = true;
+
 // run setup code
 void setup() {
   Wire.begin();
@@ -105,6 +110,8 @@ void setup() {
 
   digitalWrite(LED_LEFT, LOW);
   digitalWrite(LED_RIGHT, LOW);
+
+  colon();
 
   // testing only
   // analogWrite(LED_LEFT, LED_LR_ON_VALUE);
@@ -213,7 +220,7 @@ void loop() {
 
   // check for alarm
   // seconds: If we don't check, 'Turn off alarm' will retrigger...
-  if (wcounter == 0 && whours == hours && wminutes == minutes && seconds < 5) {
+  if (alarm && wcounter == 0 && whours == hours && wminutes == minutes && seconds < 5) {
     wcounter = ticks;
     Serial.println("Turn on alarm");
   }
@@ -418,7 +425,15 @@ void alarmOff() {
   if (wcounter) {
     // turn off alarm (if 'ringing')
     ledOff();
-    Serial.println("Turn off alarm");
+    Serial.println("alarmOff: Turn off alarm");
+  } else {
+    alarm ^= 1;
+    colon();
+    Serial.println("alarmOff: Alarm is now " + alarm ? "on" : "off");
   }
+}
+
+void colon() {
+  display.setColonOn(alarm);
 }
 
