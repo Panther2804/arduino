@@ -3,6 +3,7 @@
 
  Paul Ole und Thomas Pasch
  */
+#include "jaduardiuno.h"
 #include <Wire.h>
 #include <WireRtcLib.h>
 #include <SevenSegmentTM1637.h>
@@ -39,7 +40,7 @@ const int LED_LR_ON_VALUE = 10;
 WireRtcLib rtc;
 SevenSegmentTM1637 display(PIN_CLK, PIN_DIO);
 
-enum {
+enum struct Mode {
   MODE_CLOCK = 1,
   MODE_SET_ALARM_HOURS,
   MODE_SET_ALARM_MINUTES,
@@ -48,8 +49,15 @@ enum {
   MODE_OVERFLOW
 };
 
+// pre-increment, see http://en.cppreference.com/w/cpp/language/operator_incdec
+Mode operator++(Mode& m) {
+  int next = (int) m;
+  m = (Mode) (next + 1);
+  return m;
+}
+
 // mode, i.e. state machine state
-byte mode = MODE_CLOCK;
+Mode mode = Mode::MODE_CLOCK;
 // RTC hours of day
 uint8_t hours;
 // RTC minutes of hour
@@ -122,8 +130,8 @@ void setup() {
 }
 
 void loop() {
-  bool alarm = mode == MODE_SET_ALARM_HOURS || mode == MODE_SET_ALARM_MINUTES;
-  bool clock = mode == MODE_SET_CLOCK_HOURS || mode == MODE_SET_CLOCK_MINUTES;
+  bool alarm = mode == Mode::MODE_SET_ALARM_HOURS || mode == Mode::MODE_SET_ALARM_MINUTES;
+  bool clock = mode == Mode::MODE_SET_CLOCK_HOURS || mode == Mode::MODE_SET_CLOCK_MINUTES;
 
   // read RTC
   WireRtcLib::tm* t = rtc.getTime();
@@ -148,8 +156,8 @@ void loop() {
     }
   }
 
-  if (mode >= MODE_OVERFLOW) {
-    mode = MODE_CLOCK;
+  if (mode >= Mode::MODE_OVERFLOW) {
+    mode = Mode::MODE_CLOCK;
     Serial.println("mode overflow, back to 1");
   }
 
@@ -161,7 +169,7 @@ void loop() {
    }
    */
 
-  if (mode > MODE_CLOCK && mode < MODE_OVERFLOW) {
+  if (mode > Mode::MODE_CLOCK && mode < Mode::MODE_OVERFLOW) {
     if (bs1 || bs3) {
       Serial.print(hours);
       Serial.print(":");
@@ -177,7 +185,7 @@ void loop() {
       Serial.print(bs3);
 
       Serial.print(" mode: ");
-      Serial.print(mode);
+      Serial.print((int) mode);
 
       Serial.print(" alarm: ");
       Serial.print(whours);
@@ -185,12 +193,12 @@ void loop() {
       Serial.println(wminutes);
 
       if (alarm) {
-        hmSet(&whours, &wminutes, MODE_SET_ALARM_HOURS, MODE_SET_ALARM_MINUTES);
+        hmSet(&whours, &wminutes, Mode::MODE_SET_ALARM_HOURS, Mode::MODE_SET_ALARM_MINUTES);
       } else if (clock) {
-        hmSet(&hours, &minutes, MODE_SET_CLOCK_HOURS, MODE_SET_CLOCK_MINUTES);
+        hmSet(&hours, &minutes, Mode::MODE_SET_CLOCK_HOURS, Mode::MODE_SET_CLOCK_MINUTES);
       } else {
         Serial.print("Unknown mode:");
-        Serial.println(mode);
+        Serial.println((int) mode);
       }
     }
     if (alarm) {
@@ -242,7 +250,7 @@ void loop() {
   }
 
   // display time (if in normal mode)
-  if (mode == MODE_CLOCK) {
+  if (mode == Mode::MODE_CLOCK) {
     hmDisplay(hours, minutes, false);
   }
   delay(20);
@@ -281,7 +289,7 @@ void hmDisplay(uint8_t hours, uint8_t minutes, bool blink) {
   }
 }
 
-void hmSet(uint8_t* h, uint8_t* m, int SET_HOURS, int SET_MINUTES) {
+void hmSet(uint8_t* h, uint8_t* m, Mode SET_HOURS, Mode SET_MINUTES) {
   if (mode == SET_HOURS) {
     if (bs1) {
       *h += bs1;
@@ -345,7 +353,7 @@ void bs2Click() {
   // change mode if BUTTON2 is (newly) pressed
   if (wcounter) {
     sleepOnAlarm();
-  } else if (mode == MODE_SET_ALARM_MINUTES) {
+  } else if (mode == Mode::MODE_SET_ALARM_MINUTES) {
     // This means that the alarm has set before
     // Write it to eeprom
     WireRtcLib::tm* t = rtc.getAlarm();
@@ -358,8 +366,8 @@ void bs2Click() {
     rtc.setAlarm(t);
     Serial.println("Alarm saved to eeprom");
 
-    mode = MODE_OVERFLOW;
-  } else if (mode == MODE_SET_CLOCK_MINUTES) {
+    mode = Mode::MODE_OVERFLOW;
+  } else if (mode == Mode::MODE_SET_CLOCK_MINUTES) {
     // This means that the clock has set before
     // Write it to eeprom
     WireRtcLib::tm* t = rtc.getTime();
@@ -372,12 +380,13 @@ void bs2Click() {
     rtc.setTime(t);
     Serial.println("Clock saved to eeprom");
 
-    mode = MODE_OVERFLOW;
+    mode = Mode::MODE_OVERFLOW;
   } else {
     ++mode;
+    // mode = (Mode) (((int) mode) + 1);
   }
   Serial.print("Clicked b2 mode=");
-  Serial.println(mode);
+  Serial.println((int) mode);
 }
 
 void bs3Click() {
@@ -395,8 +404,8 @@ void bs2DuringLong() {
     // turn off alarm (if 'ringing')
     ledOff();
     Serial.println("Turn off alarm (2)");
-  } else if (mode == MODE_CLOCK) {
-    mode = MODE_SET_CLOCK_HOURS;
+  } else if (mode == Mode::MODE_CLOCK) {
+    mode = Mode::MODE_SET_CLOCK_HOURS;
   }
 }
 
