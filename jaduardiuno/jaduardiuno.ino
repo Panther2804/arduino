@@ -137,12 +137,12 @@ void setup() {
 }
 
 void loop() {
-  bool alarm = mode == Mode::MODE_SET_ALARM_HOURS || mode == Mode::MODE_SET_ALARM_MINUTES;
-  bool clock = mode == Mode::MODE_SET_CLOCK_HOURS || mode == Mode::MODE_SET_CLOCK_MINUTES;
+  bool isModeSetAlarm = mode == Mode::MODE_SET_ALARM_HOURS || mode == Mode::MODE_SET_ALARM_MINUTES;
+  bool isModeSetClock = mode == Mode::MODE_SET_CLOCK_HOURS || mode == Mode::MODE_SET_CLOCK_MINUTES;
 
   // read RTC
   WireRtcLib::tm* t = rtc.getTime();
-  if (!clock) {
+  if (!isModeSetClock) {
     hours = t->hour;
     minutes = t->min;
     seconds = t->sec;
@@ -199,18 +199,18 @@ void loop() {
       Serial.print(":");
       Serial.println(wminutes);
 
-      if (alarm) {
+      if (isModeSetAlarm) {
         hmSet(&whours, &wminutes, Mode::MODE_SET_ALARM_HOURS, Mode::MODE_SET_ALARM_MINUTES);
-      } else if (clock) {
+      } else if (isModeSetClock) {
         hmSet(&hours, &minutes, Mode::MODE_SET_CLOCK_HOURS, Mode::MODE_SET_CLOCK_MINUTES);
       } else {
         Serial.print("Unknown mode:");
         Serial.println((int) mode);
       }
     }
-    if (alarm) {
+    if (isModeSetAlarm) {
       hmDisplay(whours, wminutes, true);
-    } else if (clock) {
+    } else if (isModeSetClock) {
       hmDisplay(hours, minutes, true);
     }
 
@@ -220,7 +220,7 @@ void loop() {
 
   // check for alarm
   // seconds: If we don't check, 'Turn off alarm' will retrigger...
-  if (alarm && wcounter == 0 && whours == hours && wminutes == minutes && seconds < 5) {
+  if (alarm && wcounter == 0 && whours == hours && wminutes == minutes && seconds < 4) {
     wcounter = ticks;
     Serial.println("Turn on alarm");
   }
