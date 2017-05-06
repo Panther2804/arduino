@@ -365,7 +365,7 @@ void sleepOnAlarm() {
 }
 
 void bs1Click() {
-  if (mode != Mode::MODE_CLOCK) {
+  if (mode != Mode::MODE_CLOCK || wcounter) {
     bs1 = 1;
     Serial.println("Clicked b1");
   } else {
@@ -410,14 +410,13 @@ void bs2Click() {
     mode = Mode::MODE_OVERFLOW;
   } else {
     ++mode;
-    // mode = (Mode) (((int) mode) + 1);
   }
   Serial.print("Clicked b2 mode=");
   Serial.println((int) mode);
 }
 
 void bs3Click() {
-  if (mode != Mode::MODE_CLOCK) {
+  if (mode != Mode::MODE_CLOCK || wcounter) {
     bs3 = 1;
     Serial.println("Clicked b3");
   } else {
@@ -429,7 +428,7 @@ void bs3Click() {
 }
 
 void bs1DuringLong() {
-  if (mode != Mode::MODE_CLOCK) {
+  if (mode != Mode::MODE_CLOCK || wcounter) {
     delay(300);
     ++bs1;
   } else {
@@ -451,7 +450,7 @@ void bs2DuringLong() {
 }
 
 void bs3DuringLong() {
-  if (mode != Mode::MODE_CLOCK) {
+  if (mode != Mode::MODE_CLOCK || wcounter) {
     delay(300);
     ++bs3;
   } else {
